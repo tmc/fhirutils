@@ -85,7 +85,7 @@ func writeBundleEntry(filename string, index int, e *rpb.Bundle_Entry) error {
 	_, t, _ := strings.Cut(ts, ".")
 	// filename with extension:
 	fn := strings.TrimSuffix(filepath.Base(filename), filepath.Ext(filename))
-	fname := fmt.Sprintf("%s-%s-%d-%s.json", fn, index, t, r.GetId().GetValue())
+	fname := fmt.Sprintf("%s-%s-%d-%s.json", fn, t, index, r.GetId().GetValue())
 
 	// create file:
 	f, err := os.Create(fname)
