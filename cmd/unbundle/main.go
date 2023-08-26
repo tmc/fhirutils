@@ -1,11 +1,18 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"log"
 	"os"
 )
 
 func main() {
+	flag.Usage = func() {
+		fmt.Fprintf(flag.CommandLine.Output(), "Usage of %s: unbundle [options] <bundle file path>\n", os.Args[0])
+		flag.PrintDefaults()
+	}
+	flag.Parse()
 	args := os.Args[1:]
 
 	if len(args) != 1 {
