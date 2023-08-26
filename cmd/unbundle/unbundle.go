@@ -42,6 +42,7 @@ func Unbundle(filename, outputDir string) error {
 		return fmt.Errorf("failed to unmarshal: %v", err)
 	}
 
+	counters := make(map[string]int)
 	switch r := o.(type) {
 	case *rpb.ContainedResource:
 		log.Printf("Unbundled resource: %T", r)
@@ -49,8 +50,19 @@ func Unbundle(filename, outputDir string) error {
 		switch rr := r.OneofResource.(type) {
 		case *rpb.ContainedResource_Bundle:
 			log.Printf("bundle: %T", rr)
-			for i, e := range rr.Bundle.Entry {
-				if err := writeBundleEntry(filename, outputDir, i, e); err != nil {
+			for _, e := range rr.Bundle.Entry {
+
+				r, err := getResource(e.Resource)
+				if err != nil {
+					return fmt.Errorf("failed to get resource: %v", err)
+				}
+				ts := fmt.Sprintf("%T", r)
+				_, t, _ := strings.Cut(ts, ".")
+				j := counters[t]
+				counters[t]++
+				fmt.Println("counters", counters)
+
+				if err := writeBundleEntry(filename, outputDir, j, e); err != nil {
 					return fmt.Errorf("failed to write bundle entry: %v", err)
 				}
 			}
@@ -71,7 +83,7 @@ type Resource interface {
 var p = &patient_go_proto.Patient{}
 
 func writeBundleEntry(filename, outputDir string, index int, e *rpb.Bundle_Entry) error {
-	// {fname}-{resourceType}-{index}-{id}.json
+	// {outputDir}/{fname}/{fname}-{resourceType}-{index}-{id}.json
 	rr, err := getResource(e.Resource)
 	if err != nil {
 		return fmt.Errorf("failed to get resource: %v", err)
@@ -85,8 +97,13 @@ func writeBundleEntry(filename, outputDir string, index int, e *rpb.Bundle_Entry
 	_, t, _ := strings.Cut(ts, ".")
 	// filename with extension:
 	fn := strings.TrimSuffix(filepath.Base(filename), filepath.Ext(filename))
-	fname := fmt.Sprintf("%s-%s-%d-%s.json", fn, t, index, r.GetId().GetValue())
+	fname := fmt.Sprintf("%s/%s-%s-%d-%s.json", fn, fn, t, index, r.GetId().GetValue())
 	path := filepath.Join(outputDir, fname)
+
+	// create directory if necessary:
+	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+		return fmt.Errorf("failed to create directory: %v", err)
+	}
 
 	// create file:
 	f, err := os.Create(path)

@@ -17,7 +17,7 @@ func main() {
 		flag.PrintDefaults()
 	}
 	flag.Parse()
-	args := os.Args[1:]
+	args := flag.Args()
 
 	if len(args) != 1 {
 		log.Fatalf("Invalid number of arguments. Expected a FHIR bundle file path.")
