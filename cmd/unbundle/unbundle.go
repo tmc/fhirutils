@@ -18,7 +18,7 @@ import (
 )
 
 // Unbundle takes a filename and unbundles the resources into separate files.
-func Unbundle(filename string) error {
+func Unbundle(filename, outputDir string) error {
 	file, err := os.Open(filename)
 	if err != nil {
 		log.Fatalf("Failed opening file: %s", err)
@@ -50,7 +50,7 @@ func Unbundle(filename string) error {
 		case *rpb.ContainedResource_Bundle:
 			log.Printf("bundle: %T", rr)
 			for i, e := range rr.Bundle.Entry {
-				if err := writeBundleEntry(filename, i, e); err != nil {
+				if err := writeBundleEntry(filename, outputDir, i, e); err != nil {
 					return fmt.Errorf("failed to write bundle entry: %v", err)
 				}
 			}
@@ -70,7 +70,7 @@ type Resource interface {
 
 var p = &patient_go_proto.Patient{}
 
-func writeBundleEntry(filename string, index int, e *rpb.Bundle_Entry) error {
+func writeBundleEntry(filename, outputDir string, index int, e *rpb.Bundle_Entry) error {
 	// {fname}-{resourceType}-{index}-{id}.json
 	rr, err := getResource(e.Resource)
 	if err != nil {
@@ -86,9 +86,10 @@ func writeBundleEntry(filename string, index int, e *rpb.Bundle_Entry) error {
 	// filename with extension:
 	fn := strings.TrimSuffix(filepath.Base(filename), filepath.Ext(filename))
 	fname := fmt.Sprintf("%s-%s-%d-%s.json", fn, t, index, r.GetId().GetValue())
+	path := filepath.Join(outputDir, fname)
 
 	// create file:
-	f, err := os.Create(fname)
+	f, err := os.Create(path)
 	if err != nil {
 		return fmt.Errorf("failed to create file: %v", err)
 	}
