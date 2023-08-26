@@ -17,6 +17,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+// Unbundle takes a filename and unbundles the resources into separate files.
 func Unbundle(filename string) error {
 	file, err := os.Open(filename)
 	if err != nil {
@@ -70,7 +71,7 @@ type Resource interface {
 var p = &patient_go_proto.Patient{}
 
 func writeBundleEntry(filename string, index int, e *rpb.Bundle_Entry) error {
-	// {fname}-{index}-{resourceType}-{id}.json
+	// {fname}-{resourceType}-{index}-{id}.json
 	rr, err := getResource(e.Resource)
 	if err != nil {
 		return fmt.Errorf("failed to get resource: %v", err)
@@ -84,7 +85,7 @@ func writeBundleEntry(filename string, index int, e *rpb.Bundle_Entry) error {
 	_, t, _ := strings.Cut(ts, ".")
 	// filename with extension:
 	fn := strings.TrimSuffix(filepath.Base(filename), filepath.Ext(filename))
-	fname := fmt.Sprintf("%s-%d-%s-%s.json", fn, index, t, r.GetId().GetValue())
+	fname := fmt.Sprintf("%s-%s-%d-%s.json", fn, index, t, r.GetId().GetValue())
 
 	// create file:
 	f, err := os.Create(fname)
